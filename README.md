@@ -1,2 +1,2 @@
 # VkMessenger
-Simple client messanger for vk.com
+Simple client messenger for vk.com
