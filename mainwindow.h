@@ -35,6 +35,7 @@ private:
     void connections();
     void loadUserInfo(const QString& ids = "");
     void loadDialogs();
+    void loadAvatar(const QString& id);
 
     Ui::MainWindow *ui;
     VkAuth vkAuth;

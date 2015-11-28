@@ -6,6 +6,11 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QEventLoop>
+#include <QTimer>
 #include "session.h"
 #include "vkrequest.h"
 
@@ -25,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString token = s.get("access_token");
 
     if (s.get("access_token").isEmpty() ||
-           !VkAuth::isTokenValid(token))
+            !VkAuth::isTokenValid(token))
     {
         vkAuth.loadLoginPage();
     }
@@ -104,6 +109,7 @@ void MainWindow::onOpponentChanged(int index)
                     .object()["response"]
                     .toObject()["items"]
                     .toArray();
+            qDebug() << messages;
 
             for (auto message : messages)
             {
@@ -115,8 +121,10 @@ void MainWindow::onOpponentChanged(int index)
                                 dialogs[id] + ": " + m["body"].toString() :
                             s.get("first_name") + " " + s.get("last_name") +
                             ": " + m["body"].toString()
-                            );
+                        );
             }
+
+            loadAvatar(id);
         }
     }
     else
@@ -314,6 +322,73 @@ void MainWindow::loadDialogs()
             }
 
             qDebug() << this->dialogs;
+        }
+    }
+}
+
+void MainWindow::loadAvatar(const QString& id)
+{
+    VkRequest request;
+    QByteArray response = request.request(
+                "users.get",
+                Params {
+                    {"user_ids", id},
+                    {"fields", "photo_50"},
+                    {"v", "5.40"}
+                });
+    qDebug() << "Photo";
+    qDebug() << QString(response);
+
+    if (!response.isEmpty())
+    {
+        QString photoUrl = QJsonDocument::fromJson(response)
+                .object()["response"]
+                .toArray()[0]
+                .toObject()["photo_50"]
+                .toString();
+        qDebug() << photoUrl;
+
+        QUrl url(photoUrl);
+        QByteArray photoBytes;
+        QNetworkAccessManager* networkManager = new QNetworkAccessManager(this);
+        QNetworkRequest request(photoUrl);
+        QNetworkReply *reply = networkManager->get(request);
+
+        QEventLoop waitForAnswer;
+        connect(
+                    networkManager,
+                    SIGNAL(finished(QNetworkReply*)),
+                    &waitForAnswer,
+                    SLOT(quit())
+                    );
+        connect(
+                    networkManager,
+                    SIGNAL(finished(QNetworkReply*)),
+                    networkManager,
+                    SLOT(deleteLater())
+                    );
+        QTimer::singleShot(30000, &waitForAnswer, SLOT(quit()));
+        waitForAnswer.exec();
+        photoBytes = reply->readAll();
+        qDebug() << "Photo loaded";
+        qDebug() << photoBytes;
+        reply->deleteLater();
+        networkManager->disconnect(
+                    networkManager,
+                    SIGNAL(finished(QNetworkReply*)),
+                    &waitForAnswer,
+                    SLOT(quit())
+                    );
+
+        QPixmap photo;
+        if (photo.loadFromData(photoBytes))
+        {
+            qDebug() << "yeah";
+            ui->image->setPixmap(photo);
+        }
+        else
+        {
+            qDebug() << "fail";
         }
     }
 }
