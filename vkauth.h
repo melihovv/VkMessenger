@@ -1,11 +1,11 @@
 #ifndef VKAUTH_H
 #define VKAUTH_H
 
-#include <QWebView>
 #include <QUrl>
 #include <QString>
 #include <QList>
 #include <QPair>
+#include <QtWebEngineWidgets/QWebEngineView>
 
 class VkAuth : public QObject
 {
@@ -26,7 +26,7 @@ private slots:
     void onLoadFinished(bool success);
 
 private:
-    QWebView browser;
+    QWebEngineView browser;
     static const QUrl REDIRECT_URL;
 };
 

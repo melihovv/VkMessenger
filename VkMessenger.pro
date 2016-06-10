@@ -4,16 +4,17 @@
 #
 #-------------------------------------------------
 
-QT       += core gui webkitwidgets network
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
 TARGET = VkMessenger
 TEMPLATE = app
+QT       += core gui webenginewidgets  network
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+CONFIG += c++11
 
+qtHaveModule(uitools):!embedded: QT += uitools
+else: DEFINES += QT_NO_UITOOLS
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    mainwindow.cpp \
     longpoll.cpp \
     session.cpp \
     vkauth.cpp \

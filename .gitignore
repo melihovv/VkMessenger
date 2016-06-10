@@ -29,3 +29,5 @@
 
 # Qt Creator builds
 build-*/
+
+*.pro.user*
